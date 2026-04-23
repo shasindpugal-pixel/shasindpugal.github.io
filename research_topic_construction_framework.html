@@ -1,0 +1,311 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+body{font-family:var(--font-sans)}
+.wrap{padding:1.5rem 0}
+.progress-bar{display:flex;align-items:center;gap:0;margin-bottom:2rem;position:relative}
+.prog-step{display:flex;flex-direction:column;align-items:center;flex:1;cursor:pointer;position:relative;z-index:1}
+.prog-circle{width:36px;height:36px;border-radius:50%;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--color-text-secondary);transition:all .25s}
+.prog-label{font-size:11px;color:var(--color-text-tertiary);margin-top:6px;text-align:center;max-width:70px;line-height:1.3}
+.prog-step.active .prog-circle{background:var(--color-background-info);border-color:var(--color-border-info);color:var(--color-text-info)}
+.prog-step.active .prog-label{color:var(--color-text-info);font-weight:500}
+.prog-step.done .prog-circle{background:var(--color-background-success);border-color:var(--color-border-success);color:var(--color-text-success)}
+.prog-step.done .prog-label{color:var(--color-text-success)}
+.prog-line{flex:1;height:0.5px;background:var(--color-border-tertiary);margin-top:-20px;position:relative;z-index:0}
+.stage-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem}
+.stage-header{display:flex;align-items:center;gap:12px;margin-bottom:1rem}
+.stage-num{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;flex-shrink:0}
+.stage-title{font-size:17px;font-weight:500;color:var(--color-text-primary)}
+.stage-sub{font-size:13px;color:var(--color-text-secondary);margin-top:2px}
+.section-head{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-tertiary);margin:1rem 0 .5rem}
+.checklist{display:flex;flex-direction:column;gap:8px}
+.check-row{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.check-box{width:18px;height:18px;border-radius:4px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.check-box.ticked{background:var(--color-background-success);border-color:var(--color-border-success)}
+.check-tick{width:10px;height:10px;display:none}
+.check-box.ticked .check-tick{display:block}
+.check-text{font-size:14px;color:var(--color-text-primary);line-height:1.5}
+.check-text.ticked-text{color:var(--color-text-secondary);text-decoration:line-through}
+.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:.5rem}
+.ev-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem 1rem}
+.ev-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.ev-text{font-size:13px;color:var(--color-text-primary);line-height:1.5}
+.tip-box{border-left:2px solid var(--color-border-warning);background:var(--color-background-warning);border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;padding:.75rem 1rem;margin-top:1rem}
+.tip-label{font-size:11px;font-weight:500;color:var(--color-text-warning);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.tip-text{font-size:13px;color:var(--color-text-warning);line-height:1.5}
+.nav-row{display:flex;gap:10px;margin-top:1.25rem}
+.nav-row button{flex:1;padding:10px;font-size:14px;border-radius:var(--border-radius-md);cursor:pointer}
+.example-pill{display:inline-block;background:var(--color-background-info);color:var(--color-text-info);font-size:12px;padding:3px 10px;border-radius:20px;margin:3px 3px 3px 0;line-height:1.5}
+.progress-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:1.25rem}
+.psum{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.6rem .75rem;text-align:center}
+.psum-num{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.psum-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.done-banner{background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-lg);padding:1.25rem;text-align:center;display:none}
+.done-banner.show{display:block}
+.done-title{font-size:18px;font-weight:500;color:var(--color-text-success);margin-bottom:.5rem}
+.done-sub{font-size:14px;color:var(--color-text-success)}
+</style>
+
+<h2 class="sr-only">Interactive 5-stage framework for constructing a research topic, with evidence checklists for each stage.</h2>
+
+<div class="wrap">
+
+<div class="progress-bar" id="prog-bar">
+  <div class="prog-step active" data-s="0" onclick="goTo(0)">
+    <div class="prog-circle">1</div>
+    <div class="prog-label">Find your interest</div>
+  </div>
+  <div class="prog-line"></div>
+  <div class="prog-step" data-s="1" onclick="goTo(1)">
+    <div class="prog-circle">2</div>
+    <div class="prog-label">Scan the evidence</div>
+  </div>
+  <div class="prog-line"></div>
+  <div class="prog-step" data-s="2" onclick="goTo(2)">
+    <div class="prog-circle">3</div>
+    <div class="prog-label">Narrow & focus</div>
+  </div>
+  <div class="prog-line"></div>
+  <div class="prog-step" data-s="3" onclick="goTo(3)">
+    <div class="prog-circle">4</div>
+    <div class="prog-label">Apply PICOT</div>
+  </div>
+  <div class="prog-line"></div>
+  <div class="prog-step" data-s="4" onclick="goTo(4)">
+    <div class="prog-circle">5</div>
+    <div class="prog-label">SMART check</div>
+  </div>
+</div>
+
+<div id="stage-wrap"></div>
+
+<div class="progress-summary">
+  <div class="psum"><div class="psum-num" id="total-checks">0</div><div class="psum-lbl">Items checked</div></div>
+  <div class="psum"><div class="psum-num" id="stage-num">1 / 5</div><div class="psum-lbl">Stage</div></div>
+  <div class="psum"><div class="psum-num" id="pct">0%</div><div class="psum-lbl">Complete</div></div>
+</div>
+
+<div class="done-banner" id="done-banner">
+  <div class="done-title">Your topic is ready to submit</div>
+  <div class="done-sub">All five stages are complete. You have a focused, evidence-supported, SMART research topic.</div>
+  <button style="margin-top:1rem;padding:10px 20px;border-radius:var(--border-radius-md);cursor:pointer;font-size:14px" onclick="sendPrompt('Help me write a formal research proposal based on my completed topic framework')">Write my research proposal ↗</button>
+</div>
+
+</div>
+
+<script>
+const stages=[
+{
+  title:"Stage 1 — Find your area of interest",
+  sub:"Start broad. What excites you enough to spend months on it?",
+  color:"#E6F1FB",numColor:"#185FA5",numText:"#0C447C",
+  intro:"Before any framework, you need a genuine spark. Research done out of obligation produces weak work. Research done from curiosity produces breakthroughs.",
+  checks:[
+    {t:"I can name a broad field that genuinely interests me (e.g. medical imaging, AI diagnostics, paediatric care)"},
+    {t:"I can list at least 3 specific topics within that field"},
+    {t:"I can explain in one sentence why this topic matters to patients or society"},
+    {t:"I have confirmed my institution or supervisor approves of this general area"},
+  ],
+  evidence:{
+    label:"Evidence you must provide",
+    items:[
+      {lbl:"Topic brainstorm list",txt:"A written list of 3–5 candidate topics with a one-sentence rationale for each"},
+      {lbl:"Personal statement",txt:"2–3 sentences explaining why this area interests you and how it connects to your future career"},
+    ]
+  },
+  tip:"If you cannot explain why your topic matters to a non-expert in under 30 seconds, it is not focused enough yet.",
+  examples:["Medical imaging","AI in radiology","Paediatric oncology","Telehealth access","Medication adherence"]
+},
+{
+  title:"Stage 2 — Scan the existing evidence",
+  sub:"You cannot find a gap if you have not read the map.",
+  color:"#E1F5EE",numColor:"#0F6E56",numText:"#085041",
+  intro:"Preliminary research is not optional — it is what separates a topic from a research question. You are looking for three things: what is already known, what is debated, and what is missing.",
+  checks:[
+    {t:"I have searched at least 2 databases (PubMed, Scopus, Google Scholar, CINAHL)"},
+    {t:"I have read at least 10 relevant abstracts and at least 5 full papers"},
+    {t:"I can identify what the existing studies have already answered"},
+    {t:"I can name at least one gap, contradiction, or unanswered question in the literature"},
+    {t:"I have noted which study designs (RCT, retrospective, meta-analysis) are most common in this area"},
+  ],
+  evidence:{
+    label:"Evidence you must provide",
+    items:[
+      {lbl:"Annotated reference list",txt:"At least 5 cited papers with a 1–2 sentence summary of each and its relevance to your topic"},
+      {lbl:"Gap statement",txt:"One paragraph identifying what the literature has NOT yet answered and why your topic addresses that gap"},
+      {lbl:"Search strategy",txt:"Screenshot or table showing your database search terms, filters used, and number of results"},
+    ]
+  },
+  tip:"The gap you find in Stage 2 becomes the engine of your entire research. Do not rush this step.",
+  examples:["PubMed search log","Scopus export","Annotated bibliography","Literature gap table"]
+},
+{
+  title:"Stage 3 — Narrow and focus your topic",
+  sub:"A researchable topic is a small question, not a big one.",
+  color:"#EEEDFE",numColor:"#534AB7",numText:"#3C3489",
+  intro:"Most students fail here by keeping the topic too broad. Narrowing is not limiting your ambition — it is making your ambition achievable. Ask yourself three focusing questions.",
+  checks:[
+    {t:"I have identified the specific population I am studying (not 'patients' — which patients? age, condition, setting)"},
+    {t:"I have identified the specific variable or phenomenon I am investigating"},
+    {t:"I have identified what I am measuring as an outcome (not 'outcomes' — which outcome? how measured?)"},
+    {t:"I can write my topic in a single sentence without using the word 'and' more than once"},
+    {t:"My topic is narrow enough that it could realistically be studied with available resources"},
+  ],
+  evidence:{
+    label:"Evidence you must provide",
+    items:[
+      {lbl:"Topic refinement table",txt:"Show your topic evolving from broad → medium → focused in 3 rows with a rationale for each narrowing"},
+      {lbl:"One-sentence topic statement",txt:"A single sentence naming the population, variable, and outcome — no filler words"},
+      {lbl:"Feasibility note",txt:"A short paragraph confirming data or participants are accessible within your constraints"},
+    ]
+  },
+  tip:"If your topic takes more than one sentence to state clearly, it contains more than one study. Split it.",
+  examples:["Broad → Specific table","Draft research question","Dataset availability note","Scope statement"]
+},
+{
+  title:"Stage 4 — Structure it with PICOT",
+  sub:"PICOT is the skeleton. Every element must be filled.",
+  color:"#FAEEDA",numColor:"#854F0B",numText:"#633806",
+  intro:"The PICOT framework forces you to define every component of your research before you begin. If any box is vague, your methods section will collapse. Fill each element with specific, non-ambiguous language.",
+  checks:[
+    {t:"P — Population: I have defined who/what is studied with at least 2 specific characteristics (e.g. age, condition, setting)"},
+    {t:"I — Intervention/Phenomenon: I have defined the exposure, intervention, or variable of interest precisely"},
+    {t:"C — Comparison: I have identified what I am comparing against (another group, a baseline, a standard)"},
+    {t:"O — Outcome: I have defined the outcome and how it will be measured (units, tool, scale)"},
+    {t:"T — Time/Context: I have stated the timeframe or clinical/research context"},
+    {t:"I can combine all five elements into a single coherent research question"},
+  ],
+  evidence:{
+    label:"Evidence you must provide",
+    items:[
+      {lbl:"PICOT table",txt:"A completed 5-row table with each element filled in specific, non-ambiguous language"},
+      {lbl:"Formal research question",txt:"One question derived from the PICOT table, ending with a question mark, that a reader could answer yes/no or with a number"},
+      {lbl:"Outcome measurement plan",txt:"State the exact tool, scale, or metric you will use to measure your outcome (e.g. ICC, HbA1c, Likert scale)"},
+    ]
+  },
+  tip:"Your PICOT table should be specific enough that two different researchers reading it would design the same study.",
+  examples:["PICOT table","Research question draft","Measurement tool citation","Outcome definition"]
+},
+{
+  title:"Stage 5 — SMART validation check",
+  sub:"Final gate before submission. No exceptions.",
+  color:"#FAECE7",numColor:"#993C1D",numText:"#712B13",
+  intro:"SMART is your quality gate. A topic that fails any one criterion must be revised before it can be submitted. Be honest — a weak topic caught here saves months of failed research later.",
+  checks:[
+    {t:"Specific: My topic focuses on one population, one variable, and one outcome — not multiple"},
+    {t:"Measurable: My outcome can be expressed as a number, score, or observable category"},
+    {t:"Achievable: I have confirmed I can access the data, equipment, or participants within my constraints"},
+    {t:"Relevant: I can cite at least one guideline, policy, or clinical need that makes this topic important now"},
+    {t:"Time-bound: I have a realistic timeline with defined milestones that fits my submission deadline"},
+    {t:"Ethics: I have considered whether ethical approval is required and taken the first step to obtain it"},
+  ],
+  evidence:{
+    label:"Evidence you must provide",
+    items:[
+      {lbl:"SMART validation table",txt:"A 5-row table with each criterion and your written justification for why your topic meets it"},
+      {lbl:"Clinical/policy relevance statement",txt:"Cite a guideline, systematic review, or policy document that demonstrates why this question matters"},
+      {lbl:"Timeline chart",txt:"A Gantt chart or milestone table showing each phase from literature review to submission"},
+      {lbl:"Ethics declaration",txt:"State whether ethics approval is needed, and if so, which board and the expected timeline"},
+    ]
+  },
+  tip:"If your topic fails the 'Achievable' check, do not shrink your ambition — change your method. Secondary data analysis often solves access problems immediately.",
+  examples:["SMART table","Gantt chart","Ethics form / exemption","Clinical guideline citation"]
+}
+];
+
+let current=0;
+const totalItems=stages.reduce((a,s)=>a+s.checks.length+s.evidence.items.length,0);
+const checked={};
+
+function goTo(i){
+  current=i;
+  render();
+}
+
+function toggleCheck(id){
+  checked[id]=!checked[id];
+  render();
+}
+
+function countChecked(){
+  return Object.values(checked).filter(Boolean).length;
+}
+
+function stageChecked(si){
+  const s=stages[si];
+  const allIds=[...s.checks.map((_,ci)=>`c${si}-${ci}`),...s.evidence.items.map((_,ei)=>`e${si}-${ei}`)];
+  return allIds.every(id=>checked[id]);
+}
+
+function render(){
+  const s=stages[current];
+  const totalC=countChecked();
+  const pct=Math.round(totalC/totalItems*100);
+
+  document.getElementById('total-checks').textContent=totalC;
+  document.getElementById('stage-num').textContent=(current+1)+' / 5';
+  document.getElementById('pct').textContent=pct+'%';
+
+  const allDone=stages.every((_,i)=>stageChecked(i));
+  document.getElementById('done-banner').classList.toggle('show',allDone);
+
+  const bar=document.getElementById('prog-bar').querySelectorAll('.prog-step');
+  bar.forEach((el,i)=>{
+    el.classList.remove('active','done');
+    if(i===current) el.classList.add('active');
+    else if(stageChecked(i)) el.classList.add('done');
+  });
+
+  let html=`<div class="stage-card">
+    <div class="stage-header">
+      <div class="stage-num" style="background:${s.color};color:${s.numText}">${current+1}</div>
+      <div><div class="stage-title">${s.title}</div><div class="stage-sub">${s.sub}</div></div>
+    </div>
+    <p style="font-size:14px;color:var(--color-text-secondary);line-height:1.65;margin-bottom:.75rem">${s.intro}</p>`;
+
+  if(s.examples){
+    html+=`<div style="margin-bottom:.75rem">`;
+    s.examples.forEach(e=>{html+=`<span class="example-pill">${e}</span>`;});
+    html+=`</div>`;
+  }
+
+  html+=`<div class="section-head">Checklist — what you must confirm</div><div class="checklist">`;
+  s.checks.forEach((c,ci)=>{
+    const id=`c${current}-${ci}`;
+    const ticked=!!checked[id];
+    html+=`<div class="check-row" onclick="toggleCheck('${id}')">
+      <div class="check-box${ticked?' ticked':''}">
+        <svg class="check-tick" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:10px;height:10px">
+          <path d="M1.5 5L4 7.5L8.5 2.5" stroke="var(--color-text-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="check-text${ticked?' ticked-text':''}">${c.t}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<div class="section-head">${s.evidence.label}</div><div class="evidence-grid">`;
+  s.evidence.items.forEach((item,ei)=>{
+    const id=`e${current}-${ei}`;
+    const ticked=!!checked[id];
+    html+=`<div class="ev-card" style="cursor:pointer;border:0.5px solid ${ticked?'var(--color-border-success)':'var(--color-border-tertiary)'};background:${ticked?'var(--color-background-success)':'var(--color-background-secondary)'}" onclick="toggleCheck('${id}')">
+      <div class="ev-label" style="color:${ticked?'var(--color-text-success)':'var(--color-text-tertiary)'}">${item.lbl}</div>
+      <div class="ev-text" style="color:${ticked?'var(--color-text-success)':'var(--color-text-primary)'}">${item.txt}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<div class="tip-box"><div class="tip-label">Supervisor tip</div><div class="tip-text">${s.tip}</div></div>`;
+
+  html+=`<div class="nav-row">`;
+  if(current>0) html+=`<button onclick="goTo(${current-1})">← Previous</button>`;
+  if(current<4) html+=`<button onclick="goTo(${current+1})" style="background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)">Next stage →</button>`;
+  if(current===4) html+=`<button onclick="sendPrompt('I have completed the 5-stage research topic framework. Help me validate my final topic and write a one-page research proposal.')" style="background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success)">Submit for review ↗</button>`;
+  html+=`</div></div>`;
+
+  document.getElementById('stage-wrap').innerHTML=html;
+}
+
+render();
+</script>
